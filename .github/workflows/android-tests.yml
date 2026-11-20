@@ -1,0 +1,88 @@
+name: Android UI tests
+
+# Runs on every push to main, and on demand from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer run of the same branch cancels the older one.
+concurrency:
+  group: android-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write # test result summary
+
+env:
+  MAESTRO_VERSION: "2.12.1" # the version the suite was developed with
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+
+jobs:
+  ui-tests:
+    name: Maestro suite on API 34 (Google Play)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (with cache)
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Enable KVM (hardware acceleration for the emulator)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install Maestro CLI ${{ env.MAESTRO_VERSION }}
+        run: |
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Compile the runner (before the emulator starts)
+        run: ./gradlew --console=plain :runner:testClasses
+
+      - name: Run the suite on an emulator
+        uses: ReactiveCircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 34
+          target: google_apis_playstore
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          # Same single command as locally. The runner waits for the device to be idle,
+          # installs the APK and runs every flow.
+          script: ./gradlew --console=plain test
+
+      - name: Test summary
+        if: always()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: runner/build/test-results/test/*.xml
+          detailed_summary: true
+          include_passed: true
+
+      - name: Upload test reports (screenshots, logcat, Maestro logs, HTML report)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            runner/build/reports/
+            runner/build/test-results/
+          if-no-files-found: warn
+          retention-days: 14

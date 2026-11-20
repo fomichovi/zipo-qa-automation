@@ -33,5 +33,7 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         showStackTraces = false
         showCauses = false
+        // Show the runner's own "[runner] ..." lines (device idle wait etc.).
+        showStandardStreams = true
     }
 }

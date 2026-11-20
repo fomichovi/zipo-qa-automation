@@ -32,6 +32,7 @@ class MaestroSuiteTest {
     static void prepareDevice() {
         MaestroRunner.ensureAvailable();
         Device.ensureReady();
+        Device.waitUntilIdle(Duration.ofMinutes(5));
         Device.install(Config.apk());
         Device.warmUp(Config.appId(), Duration.ofSeconds(60));
     }

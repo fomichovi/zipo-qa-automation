@@ -24,6 +24,51 @@ public final class Device {
         }
     }
 
+    /**
+     * Waits until the device's 1-minute load average is below its CPU core count.
+     * Right after boot, Google system apps keep a Play Store emulator busy (load 10-18 for ~2 min),
+     * which made the first tests flaky. Never fails: after {@code max} it logs and continues.
+     */
+    public static void waitUntilIdle(Duration max) {
+        int cores = Math.max(1, parseInt(adb(Duration.ofSeconds(15), "shell", "nproc").output(), 2));
+        long started = System.nanoTime();
+        long deadline = started + max.toNanos();
+        double load = load();
+        while (load >= cores && System.nanoTime() < deadline) {
+            try {
+                Thread.sleep(5_000); // polling interval, not a fixed wait
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            load = load();
+        }
+        long waited = Duration.ofNanos(System.nanoTime() - started).toSeconds();
+        if (load >= cores) {
+            System.out.printf("[runner] WARNING: device still busy after %d s (load %.2f, %d cores); running anyway%n",
+                    waited, load, cores);
+        } else {
+            System.out.printf("[runner] Device idle after %d s (load %.2f, %d cores)%n", waited, load, cores);
+        }
+    }
+
+    private static double load() {
+        String out = adb(Duration.ofSeconds(15), "shell", "cat", "/proc/loadavg").output().trim();
+        try {
+            return Double.parseDouble(out.split("\\s+")[0]);
+        } catch (RuntimeException e) {
+            return 0; // unknown: don't block the run
+        }
+    }
+
+    private static int parseInt(String text, int fallback) {
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
     public static void install(Path apk) {
         if (!Files.isRegularFile(apk)) {
             throw new IllegalStateException("APK not found: " + apk);
