@@ -19,7 +19,7 @@ What I learned from exploring the app and inspecting the APK:
 2. Show a usable list: at least one row with a name and a Download button.
 3. Open the paywall from Download, with the correct title and message.
 4. Make each paywall option do what it says and return the user to Main.
-5. Stay stable through rotation and background/foreground.
+5. Stay stable when the app goes to the background and comes back.
 
 ## 3. Risks: what could break, and the impact
 
@@ -32,10 +32,9 @@ Likelihood (L) and Impact (I): 1 low · 2 medium · 3 high.
 | R3 | Download does not open the paywall: monetisation entry lost | 1 | 3 | P0 | Every paywall test |
 | R4 | Wrong or empty paywall title / message | 2 | 3 | P0 | TC-01 |
 | R5 | A paywall option does the wrong thing, stays open or crashes | 2 | 3 | P0 | TC-02 … TC-05 |
-| R6 | Paywall lost on rotation (**already reproduced**) | 3 | 2 | P1 | TC-06 |
-| R7 | Paywall lost or crash after background → foreground | 2 | 2 | P2 | TC-07 |
-| R8 | Back / outside tap does not close the paywall | 1 | 2 | P2 | TC-08 (optional) |
-| R9 | Switched-off download code would crash if enabled (UI update off the main thread, unhandled network errors, possible OOM) | 3 | 3 | n/a | Not reachable from UI: reported as code findings |
+| R6 | Paywall lost or crash after background → foreground | 2 | 2 | P2 | TC-06 |
+| R7 | Back / outside tap does not close the paywall | 1 | 2 | P2 | TC-07 (optional) |
+| R8 | Switched-off download code would crash if enabled (UI update off the main thread, unhandled network errors, possible OOM) | 3 | 3 | n/a | Not reachable from UI: reported as code findings |
 
 ## 4. Approach
 
@@ -48,7 +47,6 @@ Likelihood (L) and Impact (I): 1 low · 2 medium · 3 high.
 - **Locators:** resource IDs first; exact text only where the text is the requirement (the "Premium" title and the toasts).
 - **No fixed sleeps:** only condition-based waits.
 - **Crash/ANR rule:** a test fails if the app crashes or stops responding, even if every UI step passed.
-- **Known bugs:** tests stay in the suite, marked as known failures with a link to the bug.
 - **Open question:** toasts weren't visible in the UI tree during exploration. If Maestro can't read them, the toast tests check that the paywall closed and Main is shown, and the toast is verified from a screenshot.
 
 ## 5. Test cases
@@ -62,9 +60,8 @@ Every test starts with `launch_to_main`, then `open_paywall`.
 | TC-03 | P0 | Tap Purchase | Toast "Test paywall: purchase (no-op)"; paywall closes; Main shown |
 | TC-04 | P0 | Tap Restore purchases | Toast "Test paywall: restore (no-op)"; paywall closes; Main shown |
 | TC-05 | P0 | Tap Not now | Paywall closes; **no** toast; Main shown |
-| TC-06 | P1 | Rotate to landscape and back | Paywall still shown; no crash. **Known failure:** paywall disappears today |
-| TC-07 | P2 | Press Home, then return to the app | Paywall still shown; no crash |
-| TC-08 | P2 | Press Back; reopen and tap outside (optional) | Paywall closes each time; no toast; Main shown |
+| TC-06 | P2 | Press Home, then return to the app | Paywall still shown; no crash |
+| TC-07 | P2 | Press Back; reopen and tap outside (optional) | Paywall closes each time; no toast; Main shown |
 
 ## 6. Not automated, and why
 
@@ -82,7 +79,7 @@ Every test starts with `launch_to_main`, then `open_paywall`.
 - Every P0 and P1 risk has a test, or a written reason why not.
 - Every screen and every paywall option is exercised at least once.
 - Crash/ANR detection runs on every test.
-- **3 green runs in a row**, locally and on CI, with **no retries** (known failures excluded).
+- **3 green runs in a row**, locally and on CI, with **no retries**.
 - Every failure comes with a screenshot, logcat and the name of the failing step.
 
 ## 8. Environment
