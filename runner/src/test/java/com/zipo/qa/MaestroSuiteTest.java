@@ -3,8 +3,13 @@ package com.zipo.qa;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.zipo.qa.diagnostics.CrashDetector;
+import com.zipo.qa.diagnostics.Logcat;
+import com.zipo.qa.diagnostics.Screenshot;
+import com.zipo.qa.diagnostics.TestArtifacts;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DynamicTest;
@@ -13,8 +18,15 @@ import org.junit.jupiter.api.TestFactory;
 /**
  * One JUnit test per Maestro flow listed in flows/config.yaml.
  * Adding a test = adding a YAML file; no Java changes needed.
+ *
+ * A test fails if a Maestro step fails OR the app crashed / stopped responding (ANR)
+ * while it ran, even when every UI step passed. On failure the test's folder gets a
+ * screenshot, the full device logcat for that test, and Maestro's debug output.
  */
 class MaestroSuiteTest {
+
+    /** How long a FAILED test waits for a pending ANR report (Android reports ~5 s after input). */
+    private static final Duration ANR_GRACE = Duration.ofSeconds(10);
 
     @BeforeAll
     static void prepareDevice() {
@@ -35,17 +47,68 @@ class MaestroSuiteTest {
     }
 
     private static void run(Flow flow) {
-        MaestroRunner.Result result = MaestroRunner.run(flow);
-        if (!result.passed()) {
-            fail(flow.name() + " failed. Log: " + result.reportDir().resolve("maestro.log")
-                    + "\n" + tail(result.output(), 25));
+        TestArtifacts artifacts = new TestArtifacts(Config.reportsDir(), flow.id());
+        String start = Logcat.markStart();
+
+        MaestroRunner.Result result = MaestroRunner.run(flow, artifacts);
+
+        String logcat = Logcat.since(start);
+        Optional<CrashDetector.Problem> problem = CrashDetector.find(logcat, Config.appId());
+        if (result.passed() && problem.isEmpty()) {
+            artifacts.keepOnlyLog();
+            return;
         }
+
+        // Screenshot first: it should show the screen as close to the failure as possible.
+        boolean screenshot = Screenshot.save(artifacts.screenshot());
+
+        // A frozen app often fails the UI step BEFORE Android reports the ANR (~5 s after the
+        // unanswered input). Only on failure, keep checking briefly so the real cause is named.
+        long deadline = System.nanoTime() + ANR_GRACE.toNanos();
+        while (problem.isEmpty() && System.nanoTime() < deadline) {
+            pause(Duration.ofMillis(500)); // polling interval, not a fixed wait
+            logcat = Logcat.since(start);
+            problem = CrashDetector.find(logcat, Config.appId());
+        }
+
+        artifacts.write(artifacts.logcat(), logcat);
+        artifacts.dropMaestroLogcatCopy();
+        fail(failureMessage(flow, result, problem, artifacts, screenshot));
+    }
+
+    /** Cause first (crash/ANR), then the failing UI step, then where to look. */
+    private static String failureMessage(Flow flow, MaestroRunner.Result result,
+                                         Optional<CrashDetector.Problem> problem,
+                                         TestArtifacts artifacts, boolean screenshot) {
+        StringBuilder msg = new StringBuilder(flow.name()).append(" failed.\n");
+        problem.ifPresent(p -> msg.append(p.headline()).append('\n')
+                .append(indent(p.excerpt())).append('\n'));
+        msg.append(result.passed()
+                ? "UI steps: all passed (failed only because of the problem above).\n"
+                : "UI steps:\n" + indent(tail(result.output(), 20)) + '\n');
+        msg.append("Artifacts: ").append(artifacts.dir()).append('\n')
+                .append("  logcat.txt, maestro.log, maestro-debug/")
+                .append(screenshot ? ", failure.png" : " (screenshot could not be taken)");
+        return msg.toString();
     }
 
     /** Last lines of Maestro's output: enough to see the failing step without opening the log. */
     private static String tail(String text, int lines) {
-        String[] all = text.strip().split("\\R");
+        // Drop JVM warnings printed by the Maestro CLI itself; they're not test output.
+        String[] all = text.strip().lines().filter(l -> !l.startsWith("WARNING:")).toArray(String[]::new);
         int from = Math.max(0, all.length - lines);
         return String.join("\n", List.of(all).subList(from, all.length));
+    }
+
+    private static void pause(Duration d) {
+        try {
+            Thread.sleep(d.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static String indent(String text) {
+        return text.lines().map(l -> "  " + l).reduce((a, b) -> a + "\n" + b).orElse("");
     }
 }

@@ -75,7 +75,7 @@ public final class Device {
                 .findFirst().orElse("").trim();
     }
 
-    static Shell.Result adb(Duration timeout, String... args) {
+    public static Shell.Result adb(Duration timeout, String... args) {
         List<String> cmd = new ArrayList<>();
         cmd.add(Config.adbBin());
         Config.device().ifPresent(serial -> {

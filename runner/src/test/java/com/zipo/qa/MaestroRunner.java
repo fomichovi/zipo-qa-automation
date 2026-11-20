@@ -1,18 +1,16 @@
 package com.zipo.qa;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import com.zipo.qa.diagnostics.TestArtifacts;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Runs one Maestro flow and keeps its output in the flow's report folder. */
+/** Runs one Maestro flow; its output and debug files go into the test's artifact folder. */
 public final class MaestroRunner {
 
     private static final Duration FLOW_TIMEOUT = Duration.ofMinutes(5);
 
-    public record Result(boolean passed, String output, Path reportDir) {}
+    public record Result(boolean passed, String output) {}
 
     private MaestroRunner() {}
 
@@ -25,14 +23,7 @@ public final class MaestroRunner {
         }
     }
 
-    public static Result run(Flow flow) {
-        Path reportDir = Config.reportsDir().resolve(flow.id());
-        try {
-            Files.createDirectories(reportDir);
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot create " + reportDir, e);
-        }
-
+    public static Result run(Flow flow, TestArtifacts artifacts) {
         List<String> cmd = new ArrayList<>();
         cmd.add(Config.maestroBin());
         Config.device().ifPresent(serial -> {
@@ -40,18 +31,13 @@ public final class MaestroRunner {
             cmd.add(serial);
         });
         cmd.add("test");
+        cmd.add("--debug-output");
+        cmd.add(artifacts.maestroDebug().toString());
+        cmd.add("--flatten-debug-output");
         cmd.add(flow.file().toString());
 
         Shell.Result result = Shell.run(cmd, FLOW_TIMEOUT);
-        writeQuietly(reportDir.resolve("maestro.log"), result.output());
-        return new Result(result.ok(), result.output(), reportDir);
-    }
-
-    private static void writeQuietly(Path file, String text) {
-        try {
-            Files.writeString(file, text);
-        } catch (IOException ignored) {
-            // the output is also attached to the test failure message
-        }
+        artifacts.write(artifacts.maestroLog(), result.output());
+        return new Result(result.ok(), result.output());
     }
 }
