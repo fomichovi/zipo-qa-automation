@@ -1,0 +1,10 @@
+appId: com.zipo.interviewproject
+name: "TC-05 Not now"
+tags: [paywall, P0]
+---
+- runFlow: ../subflows/launch_to_main.yaml
+- runFlow: ../subflows/open_paywall.yaml
+- tapOn:
+    id: "paywall_btn_not_now"
+- runFlow: ../subflows/assert_no_toast.yaml   # Not now must not show any toast
+- runFlow: ../subflows/assert_on_main.yaml

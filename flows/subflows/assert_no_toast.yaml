@@ -1,0 +1,12 @@
+# Fails if a paywall toast is on screen RIGHT NOW.
+# Run it immediately after the tap. Don't use assertNotVisible for this: it waits for the
+# element to disappear, and a toast disappears by itself after ~2 s, so it would always pass.
+appId: com.zipo.interviewproject
+---
+- runFlow:
+    when:
+      visible:
+        text: "Test paywall:.*"
+    commands:
+      # Deliberately failing step, so the report says what went wrong.
+      - assertVisible: "UNEXPECTED paywall toast was shown"

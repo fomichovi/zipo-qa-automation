@@ -1,0 +1,16 @@
+appId: com.zipo.interviewproject
+name: "TC-07 Dismiss with Back and outside tap"
+tags: [paywall, P2]
+---
+- runFlow: ../subflows/launch_to_main.yaml
+# Back closes the paywall
+- runFlow: ../subflows/open_paywall.yaml
+- back
+- runFlow: ../subflows/assert_no_toast.yaml
+- runFlow: ../subflows/assert_on_main.yaml
+# Tap outside the dialog closes the paywall
+- runFlow: ../subflows/open_paywall.yaml
+- tapOn:
+    point: "50%,95%"
+- runFlow: ../subflows/assert_no_toast.yaml
+- runFlow: ../subflows/assert_on_main.yaml

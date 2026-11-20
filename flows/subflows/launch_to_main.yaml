@@ -1,0 +1,25 @@
+# Fresh start for every test: cleared data, Splash shown, Main reached,
+# and the list has at least one usable row. Row names are NOT checked,
+# because the list content is treated as dynamic.
+appId: com.zipo.interviewproject
+---
+- setOrientation: PORTRAIT
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "splash_app_name"
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: "list_rv"
+    timeout: 10000            # Splash -> Main budget from the test plan
+- assertVisible:
+    id: "my_adapter_item_tv"
+    text: ".*\\S.*"           # first row name is not blank
+    index: 0
+- assertVisible:
+    id: "my_adapter_item_btn"
+    index: 0
+    enabled: true

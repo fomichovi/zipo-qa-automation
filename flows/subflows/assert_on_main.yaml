@@ -1,0 +1,9 @@
+# Paywall is closed and the user is back on Main.
+appId: com.zipo.interviewproject
+---
+- extendedWaitUntil:
+    notVisible:
+      id: "paywall_title"
+    timeout: 5000
+- assertVisible:
+    id: "list_rv"

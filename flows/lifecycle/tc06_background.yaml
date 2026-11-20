@@ -1,0 +1,11 @@
+appId: com.zipo.interviewproject
+name: "TC-06 Background and return with paywall open"
+tags: [lifecycle, P2]
+---
+- runFlow: ../subflows/launch_to_main.yaml
+- runFlow: ../subflows/open_paywall.yaml
+- pressKey: Home
+- launchApp:
+    stopApp: false            # bring the existing task back, don't restart
+- assertVisible:
+    id: "paywall_title"

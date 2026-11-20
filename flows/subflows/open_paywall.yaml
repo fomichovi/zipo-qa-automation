@@ -1,0 +1,10 @@
+# Tap Download on the FIRST row (all rows share one handler) and wait for the paywall.
+appId: com.zipo.interviewproject
+---
+- tapOn:
+    id: "my_adapter_item_btn"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: "paywall_title"
+    timeout: 5000

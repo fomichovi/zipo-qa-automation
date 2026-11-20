@@ -1,0 +1,9 @@
+appId: com.zipo.interviewproject
+name: "TC-02 Subscribe"
+tags: [paywall, P0]
+---
+- runFlow:
+    file: ../subflows/choose_paywall_option.yaml
+    env:
+      BUTTON_ID: "paywall_btn_subscribe"
+      EXPECTED_TOAST: "Test paywall: subscribe \\(no-op\\)"

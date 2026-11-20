@@ -1,0 +1,20 @@
+# Gradle / Java
+.gradle/
+build/
+runner/build/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Test output
+reports/
+.maestro/
+
+# Secrets
+.env
+
+# macOS
+.DS_Store

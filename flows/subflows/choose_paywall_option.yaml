@@ -1,0 +1,15 @@
+# Shared logic for paywall options that show a toast (TC-02 .. TC-04).
+# Params:
+#   BUTTON_ID       resource id of the paywall button to tap
+#   EXPECTED_TOAST  exact toast text (regex-escaped)
+appId: com.zipo.interviewproject
+---
+- runFlow: launch_to_main.yaml
+- runFlow: open_paywall.yaml
+- tapOn:
+    id: "${BUTTON_ID}"
+- extendedWaitUntil:
+    visible:
+      text: "${EXPECTED_TOAST}"
+    timeout: 3000
+- runFlow: assert_on_main.yaml

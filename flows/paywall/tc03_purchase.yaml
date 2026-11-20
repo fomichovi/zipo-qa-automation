@@ -1,0 +1,9 @@
+appId: com.zipo.interviewproject
+name: "TC-03 Purchase"
+tags: [paywall, P0]
+---
+- runFlow:
+    file: ../subflows/choose_paywall_option.yaml
+    env:
+      BUTTON_ID: "paywall_btn_purchase"
+      EXPECTED_TOAST: "Test paywall: purchase \\(no-op\\)"

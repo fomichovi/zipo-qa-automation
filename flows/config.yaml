@@ -1,0 +1,5 @@
+# Maestro workspace config: only these folders contain tests.
+# subflows/ holds reusable steps and is never run on its own.
+flows:
+  - paywall/*
+  - lifecycle/*

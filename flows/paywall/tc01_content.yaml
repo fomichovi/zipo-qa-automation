@@ -1,0 +1,14 @@
+appId: com.zipo.interviewproject
+name: "TC-01 Paywall content"
+tags: [paywall, P0]
+---
+- runFlow: ../subflows/launch_to_main.yaml
+- runFlow: ../subflows/open_paywall.yaml
+- assertVisible:
+    id: "paywall_title"
+    text: "Premium"
+- assertVisible:
+    id: "paywall_message"
+    text: ".*\\S.*"           # not blank; wording is not asserted
+    below:
+      id: "paywall_title"
