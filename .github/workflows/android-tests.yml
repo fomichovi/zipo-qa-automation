@@ -49,6 +49,10 @@ jobs:
         run: |
           curl -fsSL https://get.maestro.mobile.dev | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+          # Fail fast if the installer ignored the pin.
+          installed="$("$HOME/.maestro/bin/maestro" --version | tail -1)"
+          echo "Maestro installed: $installed"
+          test "$installed" = "$MAESTRO_VERSION"
 
       - name: Compile the runner (before the emulator starts)
         run: ./gradlew --console=plain :runner:testClasses
