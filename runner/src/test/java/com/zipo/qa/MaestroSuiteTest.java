@@ -3,6 +3,8 @@ package com.zipo.qa;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.zipo.qa.ai.FailureTriage;
+import com.zipo.qa.ai.TriageInput;
 import com.zipo.qa.diagnostics.CrashDetector;
 import com.zipo.qa.diagnostics.Logcat;
 import com.zipo.qa.diagnostics.Screenshot;
@@ -74,7 +76,27 @@ class MaestroSuiteTest {
 
         artifacts.write(artifacts.logcat(), logcat);
         artifacts.dropMaestroLogcatCopy();
-        fail(failureMessage(flow, result, problem, artifacts, screenshot));
+
+        // Optional, advisory: never changes the result below.
+        FailureTriage.Outcome triage = FailureTriage.analyse(new TriageInput(
+                flow.name(), Config.appId(), readQuietly(flow.file()), tail(result.output(), 60),
+                problem.map(CrashDetector.Problem::headline).orElse(null), logcat,
+                screenshot ? artifacts.screenshot() : null));
+        if (triage.status() != FailureTriage.Status.SKIPPED) {
+            String md = FailureTriage.markdown(flow.name(), triage);
+            artifacts.write(artifacts.aiTriage(), md);
+            CiSummary.append(md);
+        }
+
+        fail(failureMessage(flow, result, problem, artifacts, screenshot) + "\n" + triage.oneLine());
+    }
+
+    private static String readQuietly(java.nio.file.Path file) {
+        try {
+            return java.nio.file.Files.readString(file);
+        } catch (java.io.IOException e) {
+            return "(could not read " + file + ")";
+        }
     }
 
     /** Cause first (crash/ANR), then the failing UI step, then where to look. */

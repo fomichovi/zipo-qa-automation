@@ -15,6 +15,7 @@ import java.util.stream.Stream;
  *     failure.png     on failure: the screen when the test ended
  *     logcat.txt      on failure: full device log (all apps) for this test
  *     maestro-debug/  on failure: Maestro's step screenshots and UI tree (its duplicate logcat removed)
+ *     ai-triage.md    on failure, if ANTHROPIC_API_KEY is set: advisory AI triage note
  * </pre>
  * Passing tests keep only maestro.log, so CI artifacts stay small.
  */
@@ -37,6 +38,7 @@ public final class TestArtifacts {
     public Path screenshot() { return dir.resolve("failure.png"); }
     public Path logcat() { return dir.resolve("logcat.txt"); }
     public Path maestroDebug() { return dir.resolve("maestro-debug"); }
+    public Path aiTriage() { return dir.resolve("ai-triage.md"); }
 
     /** Called when the test passed: drop everything except maestro.log. */
     public void keepOnlyLog() {

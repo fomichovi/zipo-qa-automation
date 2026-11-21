@@ -12,6 +12,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.yaml:snakeyaml:2.3")
+    // Optional AI failure triage (only used when ANTHROPIC_API_KEY is set).
+    testImplementation("com.anthropic:anthropic-java:3.3.0")
 }
 
 // ./gradlew unitTest : the framework's own unit tests (no device needed, runs in seconds).
