@@ -4,9 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.zipo.qa.diagnostics.CrashDetector.Kind;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for the crash/ANR detector. Log lines use real logcat formats; no device needed. */
+/**
+ * Unit tests for the crash/ANR detector. Log lines use real logcat formats; no device needed.
+ * Tagged "framework": run with ./gradlew unitTest, kept out of the app's UI suite (./gradlew test).
+ */
+@Tag("framework")
 class CrashDetectorTest {
 
     private static final String APP = "com.zipo.interviewproject";

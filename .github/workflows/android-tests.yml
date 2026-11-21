@@ -54,8 +54,9 @@ jobs:
           echo "Maestro installed: $installed"
           test "$installed" = "$MAESTRO_VERSION"
 
-      - name: Compile the runner (before the emulator starts)
-        run: ./gradlew --console=plain :runner:testClasses
+      # Fails in seconds if the framework itself is broken, before the emulator spends minutes booting.
+      - name: Framework unit tests (no device)
+        run: ./gradlew --console=plain unitTest
 
       - name: Run the suite on an emulator
         uses: ReactiveCircus/android-emulator-runner@v2.38.0

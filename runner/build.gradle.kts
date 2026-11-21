@@ -14,8 +14,22 @@ dependencies {
     testImplementation("org.yaml:snakeyaml:2.3")
 }
 
+// ./gradlew unitTest : the framework's own unit tests (no device needed, runs in seconds).
+val unitTest by tasks.registering(Test::class) {
+    description = "Runs the test framework's own unit tests (no device needed)."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform { includeTags("framework") }
+    testLogging {
+        events("passed", "failed", "skipped")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
+// ./gradlew test : the app's UI test suite on a connected device or emulator.
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform { excludeTags("framework") }
     // UI tests talk to a real device: never skip them as "up to date".
     outputs.upToDateWhen { false }
 
