@@ -1,5 +1,5 @@
 appId: com.zipo.interviewproject
-name: "TC-07 Dismiss with Back and outside tap"
+name: "TC-06 Dismiss with Back and outside tap"
 tags: [paywall, P2]
 ---
 - runFlow: ../subflows/launch_to_main.yaml

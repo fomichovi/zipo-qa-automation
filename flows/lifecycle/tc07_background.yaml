@@ -1,5 +1,5 @@
 appId: com.zipo.interviewproject
-name: "TC-06 Background and return with paywall open"
+name: "TC-07 Background and return with paywall open"
 tags: [lifecycle, P2]
 ---
 - runFlow: ../subflows/launch_to_main.yaml

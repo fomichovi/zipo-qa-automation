@@ -1,6 +1,8 @@
 # Test Plan TP-ZIPO-001: Interview Project (Android)
 
-**Version:** 1.0 · **Status:** Draft, written before any test code · **Date:** 2026-11-20
+**Version:** 1.2 · **Status:** v1.0 written before any test code · **Date:** 2026-11-20
+
+**Revisions:** 1.1: rotation test removed (the bug is documented in `BUGS.md` instead of kept as a failing test). 1.2: TC-06 and TC-07 swapped to follow the run order; coverage rule reworded (the plan has no P1 risks). Why: see [AI_PROMPTS.md](AI_PROMPTS.md#review-fixes-after-the-first-submission).
 
 ## 1. Scope and context
 
@@ -32,8 +34,8 @@ Likelihood (L) and Impact (I): 1 low · 2 medium · 3 high.
 | R3 | Download does not open the paywall: monetisation entry lost | 1 | 3 | P0 | Every paywall test |
 | R4 | Wrong or empty paywall title / message | 2 | 3 | P0 | TC-01 |
 | R5 | A paywall option does the wrong thing, stays open or crashes | 2 | 3 | P0 | TC-02 … TC-05 |
-| R6 | Paywall lost or crash after background → foreground | 2 | 2 | P2 | TC-06 |
-| R7 | Back / outside tap does not close the paywall | 1 | 2 | P2 | TC-07 (optional) |
+| R6 | Paywall lost or crash after background → foreground | 2 | 2 | P2 | TC-07 |
+| R7 | Back / outside tap does not close the paywall | 1 | 2 | P2 | TC-06 (optional) |
 | R8 | Switched-off download code would crash if enabled (UI update off the main thread, unhandled network errors, possible OOM) | 3 | 3 | n/a | Not reachable from UI: reported as code findings |
 
 ## 4. Approach
@@ -60,8 +62,8 @@ Every test starts with `launch_to_main`, then `open_paywall`.
 | TC-03 | P0 | Tap Purchase | Toast "Test paywall: purchase (no-op)"; paywall closes; Main shown |
 | TC-04 | P0 | Tap Restore purchases | Toast "Test paywall: restore (no-op)"; paywall closes; Main shown |
 | TC-05 | P0 | Tap Not now | Paywall closes; **no** toast; Main shown |
-| TC-06 | P2 | Press Home, then return to the app | Paywall still shown; no crash |
-| TC-07 | P2 | Press Back; reopen and tap outside (optional) | Paywall closes each time; no toast; Main shown |
+| TC-06 | P2 | Press Back; reopen and tap outside (optional) | Paywall closes each time; no toast; Main shown |
+| TC-07 | P2 | Press Home, then return to the app | Paywall still shown; no crash |
 
 ## 6. Not automated, and why
 
@@ -76,7 +78,7 @@ Every test starts with `launch_to_main`, then `open_paywall`.
 
 ## 7. When coverage is enough
 
-- Every P0 and P1 risk has a test, or a written reason why not.
+- Every risk in section 3 has a test, or a written reason why not.
 - Every screen and every paywall option is exercised at least once.
 - Crash/ANR detection runs on every test.
 - **3 green runs in a row**, locally and on CI, with **no retries**.

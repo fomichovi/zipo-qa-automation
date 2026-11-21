@@ -9,7 +9,7 @@ AI was used in two places:
 The working method, set in the first prompt and kept for the whole project:
 - For each deliverable the assistant **proposed a plan**; I reviewed it, changed it where needed, and **approved it** before any work started.
 - After building, the assistant **checked and tested its own output** (re-runs, deliberately broken tests, fresh-clone runs) and reported what it found and fixed.
-- **Nothing was committed without my approval**, and everything was pushed once at the end, to keep the git history clean.
+- **Nothing was committed without my approval.** Commits stayed local and were pushed in two batches: once in Step 4 to get CI running, and once at the end.
 
 Where my decisions changed the assistant's proposals:
 - Tool: switched from the proposed Python + Appium to **Maestro + Java**.
@@ -70,7 +70,7 @@ Only prompts and instructions are listed: setup messages and requests for explan
 
 > Approve, commit the APK and include TC-08
 
-*(TC-08 was then the optional "Back / outside tap" test, now TC-07.)*
+*(TC-08 was then the optional "Back / outside tap" test, now TC-06.)*
 
 > cold run emulator and rerun current tests
 
@@ -99,6 +99,8 @@ Only prompts and instructions are listed: setup messages and requests for explan
 > 1. trigger only on Push to main and manual run
 > 2. Play store
 > 3. Ok to create public repo
+
+*(A pull request trigger was added later, in the review fixes below.)*
 
 > no need to do failure demo on a temporary branch
 
@@ -154,3 +156,22 @@ Only prompts and instructions are listed: setup messages and requests for explan
 > fixing spelling only,
 > I also want to remove from the prompting general questions like "what is that and explain it to me etc" - keep only prompting, editing answers etc
 > The first messages - remove
+
+### Review fixes (after the first submission)
+After an AI review of the finished repo against the brief, I picked the fixes to make and asked for them in one commit:
+
+> fix items 2 and 3 in the repo
+> add #4
+> add #6
+> #12 lets switch
+> #13 - explain
+>
+> Do no commit anything yet. all these changes I want to do in 1 commit
+
+*(#2: show the plan's "3 green runs" exit criterion is met; #3: fix inconsistencies between the documents; #4: mention the HTML test report as a CI artifact; #6: run CI on pull requests too; #12: swap TC-06 and TC-07 so the IDs follow the run order; #13: explain why the test plan changed after the test code.)*
+
+**Why the test plan changed after the test code.** The plan was committed first, on its own, before any test code (`docs: add test plan`). It was then edited on purpose, in separate commits, when a decision changed:
+- `docs: remove rotation test from test plan`: I decided not to keep the rotation test as a permanently failing test; the bug is in `BUGS.md` instead. This commit has the same timestamp as the first test commits because the plan and the code were changed in the same step.
+- The review fixes commit: the coverage rule referred to "P1" risks that the plan doesn't have (now "every risk in section 3"), and TC-06 / TC-07 were swapped to match the order the tests run in.
+
+The scope, risks and approach in the plan are otherwise unchanged from the first commit.

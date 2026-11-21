@@ -50,8 +50,8 @@ Every test starts with two shared steps, so launch, the list and opening the pay
 | TC-03 | P0 | Purchase | Toast "Test paywall: purchase (no-op)"; paywall closes |
 | TC-04 | P0 | Restore purchases | Toast "Test paywall: restore (no-op)"; paywall closes |
 | TC-05 | P0 | Not now | Paywall closes; **no** toast |
-| TC-06 | P2 | Background and return with paywall open | Paywall still shown; no crash |
-| TC-07 | P2 | Dismiss with Back and outside tap | Paywall closes each time; no toast |
+| TC-06 | P2 | Dismiss with Back and outside tap | Paywall closes each time; no toast |
+| TC-07 | P2 | Background and return with paywall open | Paywall still shown; no crash |
 
 Plus, for every test: **it fails if the app crashes or stops responding (ANR)**, even when all UI steps passed. Risks, priorities and what's left to manual testing are in the [test plan](TEST_PLAN.md).
 
@@ -128,12 +128,16 @@ When the app crashes or freezes, the cause comes first, e.g. `App crashed: java.
 
 ## CI
 
-[`.github/workflows/android-tests.yml`](.github/workflows/android-tests.yml) runs on every push to `main` and on demand (Actions → Android UI tests → Run workflow):
+[`.github/workflows/android-tests.yml`](.github/workflows/android-tests.yml) runs on every push to `main`, on every pull request into `main`, and on demand (Actions → Android UI tests → Run workflow):
 1. Set up Java 17, Gradle (cached) and hardware acceleration for the emulator.
 2. Install Maestro **2.12.1** and fail if the installed version differs.
 3. **Framework unit tests first** (`./gradlew unitTest`, no device). If the framework is broken, the run stops in seconds instead of after a 7-minute emulator run with untrustworthy results.
 4. Start an **API 34 Google Play** emulator (x86_64, 4 cores, 4 GB, animations off) and run `./gradlew test`, the same command as locally.
 5. Always, even on failure: a per-test result table on the run page, and the `test-reports` artifact (per-test folders, HTML report, JUnit XML).
+
+**Test report (optional extra):** every run uploads the Gradle HTML test report (`runner/build/reports/tests/test/index.html`) and JUnit XML in the `test-reports` artifact, and the per-test result table is shown on the run page.
+
+**Stability:** the test plan's exit criterion is 3 green runs in a row with no retries. It was checked locally during development, and every CI run on `main` so far has been green with no retries (see the [Actions history](https://github.com/fomichovi/zipo-qa-automation/actions/workflows/android-tests.yml)).
 
 The whole job takes about 7.5 minutes. The `ANTHROPIC_API_KEY` repository secret is optional; without it, AI triage is skipped.
 
